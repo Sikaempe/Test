@@ -1,3 +1,3 @@
 release:
-  sourceBranch: develop
-  targetBranch: master
+  sourceBranch: support/0.13
+  targetBranch: support/0.13
