@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         BITBUCKET_URL = 'https://bitbucket.e-konzern.de/scm/btcvpp/test-repo.git'
-        GITHUB_REPO_URL = 'https://github.com/Sikaempe/test-repo.git'
+        GITHUB_REPO_URL = 'https://github.com/Sikaempe/Test-repo.git'
     }
 
     stages {
@@ -11,55 +11,26 @@ pipeline {
             steps {
                 script {
                     echo "Cloning Bitbucket repository..."
+                    sh """
+                        rm -r ./*
+                    """
                     withCredentials([usernamePassword(credentialsId: 'scm-default', passwordVariable: 'BITBUCKET_PASS', usernameVariable: 'BITBUCKET_USER')]) {
-                        sh """
-                            if [ ! -d "test-repo" ]; then
-                                git clone https://$BITBUCKET_USER:$BITBUCKET_PASS@bitbucket.e-konzern.de/scm/btcvpp/test-repo.git test-repo
-                            else
-                                echo "Repository already cloned."
-                            fi
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Add GitHub Remote') {
-            steps {
-                script {
-                    echo "Adding GitHub remote..."
-                    withCredentials([string(credentialsId: 'github-token-simon', variable: 'GITHUB_TOKEN')]) {
-                        sh """
-                            if git remote | grep -q Test-repo; then
-                                git remote add --fetch https://${GITHUB_TOKEN}@github.com/Sikaempe/test-repo.git
-                            fi
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Push All Branches to GitHub') {
-            steps {
-                script {
-                    echo "Pushing all branches to GitHub..."
-                    withCredentials([string(credentialsId: 'github-token-simon', variable: 'GITHUB_TOKEN')]) {
-                        sh """
-                            git push https://${GITHUB_TOKEN}@github.com/Sikaempe/test-repo.git --all
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Push All Tags to GitHub') {
-            steps {
-                script {
-                    echo "Pushing all tags to GitHub..."
-                    withCredentials([string(credentialsId: 'github-token-simon', variable: 'GITHUB_TOKEN')]) {
-                        sh """
-                            git push https://${GITHUB_TOKEN}@github.com/Sikaempe/test-repo.git --tags
-                        """
+                        withCredentials([string(credentialsId: 'github-token-simon', variable: 'GITHUB_TOKEN')]) {
+                            sh """
+                                if [ ! -d "test-repo" ]; then
+                                    git clone https://$BITBUCKET_USER:$BITBUCKET_PASS@bitbucket.e-konzern.de/scm/btcvpp/test-repo.git
+                                else
+                                    echo "Repository already cloned."
+                                fi
+                                cd test-repo
+                                git fetch origin
+                                git pull origin sikaempe-testbranch:sikaempe-testbranch
+                                git remote add new-origin https://${GITHUB_TOKEN}@github.com/Sikaempe/Test.git
+                                git push --all new-origin
+                                git push --tags new-origin
+                                git remote -v
+                            """
+                        }
                     }
                 }
             }
